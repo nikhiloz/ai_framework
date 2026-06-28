@@ -1,41 +1,29 @@
-# Roadmap to Large Language Models (LLMs)
+# Roadmap to Conversational AI
 
-This document outlines the gap between the current Multi-Layer Perceptron (MLP) framework and a conversational model capable of being run by Ollama.
+This document outlines the phased evolution of the `ai_framework` from a training tutorial to an operational conversational agent.
 
-## 1. Current State: The MLP
-Our current framework implements a basic Feed-Forward Neural Network. It is the foundation of AI, handling basic vector-to-vector mappings (like the XOR problem).
+## Phase 1: Foundation & Training
+- [x] Matrix Engine & MLP Foundation
+- [x] Transformer Architecture & Causal Masking
+- [x] End-to-End Training Harness (Synthetic)
 
-## 2. The Gap: MLP vs. Transformer
-To reach "conversation level," we must move from simple dense layers to the **Transformer Architecture**.
+## Phase 2: From Training to Generation (Inference)
+- [x] **Tokenizer Integration:** Implement a robust BPE/SentencePiece tokenizer to handle real text.
+- [x] **Generation Loop (Sampling):** Implement `greedy` and `top-k` sampling to generate text token-by-token.
+- [x] **KV Cache:** Implement Key-Value caching to make inference efficient.
 
-| Feature | MLP (Current) | LLM / Transformer |
-| :--- | :--- | :--- |
-| **Architecture** | Dense Layers | Transformer Blocks |
-| **Memory** | No temporal memory | Self-Attention Mechanism |
-| **Input** | Simple Vectors | Tokenized Text |
-| **Scale** | 10s of Parameters | Billions of Parameters |
-| **Format** | Custom C Structs | GGUF (Ollama Format) |
+## Phase 3: Conversational Capabilities
+- [x] **Instruction Fine-Tuning Pipeline:** Train on instruction-response pairs.
+- [x] **Prompt Formatting:** Handle chat history and chat templates.
 
-## 3. The Path Forward
+## Phase 4: Operational Integration
+- [x] **Model Weight Export:** Implement GGUF exporter for compatibility with `llama.cpp` / Ollama.
+- [x] **Conversational Web Interface:** Integrate the operational model into the webserver.
+- [x] **C-Bridge & Shared Library:** Create `.so` for Python interop.
+- [x] **Interactive AI CLI:** Implement a streaming CLI for local interaction.
 
-### Stage 1: Language Foundation
-- [x] **Tokenization**: Implement a system to convert text to token IDs (e.g., BPE).
-- [x] **Embedding Layers**: Map token IDs to high-dimensional vectors.
-
-### Stage 2: Transformer Architecture
-- [x] **Self-Attention**: Implement the mechanism that allows the model to weight the importance of different tokens in a sequence.
-- [x] **Multi-Head Attention**: Parallel attention heads for diverse feature extraction.
-- [x] **Positional Encoding**: Adding information about the order of tokens.
-- [x] **Layer Normalization**: Ensuring numerical stability during training.
-- [ ] **Transformer Block**: Integration of the above into a repeatable layer. (In progress/Integrated)
-- [ ] **Causal Masking**: Training for "Next Token Prediction."
-
-### Stage 3: Training & Scaling
-- **Causal Masking**: Training for "Next Token Prediction."
-- **Performance**: Integrating BLAS or CUDA for GPU acceleration.
-
-### Stage 4: Ollama Integration
-- **GGUF Exporter**: Developing a tool to export weights into the GGUF binary format used by `llama.cpp` and Ollama.
-
-## 4. Conclusion
-The current framework has mastered the "alphabet" of AI (Weights $ightarrow$ Forward $ightarrow$ Loss $ightarrow$ Backprop $ightarrow$ Update). The next leap is moving from static mappings to sequence-aware attention.
+## Phase 5: Training & Personality (Current Goal)
+- [ ] **Dataset Curation:** Gather high-quality "Jolly" conversational pairs.
+- [ ] **Pre-training Loop:** Implement large-scale text prediction to learn language.
+- [ ] **SFT (Supervised Fine-Tuning):** Train the model to follow instructions.
+- [ ] **Personality Alignment:** Fine-tune the model specifically on happy, high-energy datasets to create the "Jolly" persona.

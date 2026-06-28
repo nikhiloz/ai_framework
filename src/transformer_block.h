@@ -17,6 +17,13 @@ typedef struct {
     Matrix b2; // (1, embed_dim)
     int embed_dim;
     int ffn_dim;
+
+    // Intermediate activations for backward pass
+    Matrix ln1_input;
+    Matrix mha_out;
+    Matrix res1;
+    Matrix ln2_input;
+    Matrix ffn1;
 } TransformerBlock;
 
 TransformerBlock create_transformer_block(int num_heads, int embed_dim, int ffn_dim);
@@ -26,5 +33,11 @@ void free_transformer_block(TransformerBlock *tb);
 // input: Matrix of shape (seq_len, embed_dim)
 // returns: Matrix of shape (seq_len, embed_dim)
 Matrix transformer_block_forward(TransformerBlock *tb, Matrix *input);
+
+// Backprop through the transformer block
+// input: Original input to forward (seq_len, embed_dim)
+// grad_output: Gradient w.r.t. block output (seq_len, embed_dim)
+// returns: Gradient w.r.t. block input (seq_len, embed_dim)
+Matrix transformer_block_backward(TransformerBlock *tb, Matrix *input, Matrix *grad_output);
 
 #endif

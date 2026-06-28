@@ -18,4 +18,10 @@ void free_mha(MultiHeadAttention *mha);
 // Computes the MHA output for a given input matrix
 Matrix mha_forward(MultiHeadAttention *mha, Matrix *input);
 
+// Backprop through MHA
+// input: Original input to mha_forward (seq_len, embed_dim)
+// grad_output: Gradient of loss w.r.t. output (seq_len, embed_dim)
+// returns: Gradient w.r.t. input (seq_len, embed_dim)
+Matrix mha_backward(MultiHeadAttention *mha, Matrix *input, Matrix *grad_output);
+
 #endif

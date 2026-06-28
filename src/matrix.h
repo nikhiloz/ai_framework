@@ -24,6 +24,7 @@ void matrix_scalar_multiply(Matrix *m, float scalar);
 // The Core of AI: Matrix Multiplication
 Matrix matrix_multiply(Matrix *a, Matrix *b);
 Matrix matrix_transpose(Matrix *m);
+Matrix copy_matrix(Matrix *m);
 
 // Utility
 void matrix_print(Matrix *m);

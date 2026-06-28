@@ -1,18 +1,21 @@
 # AI Framework Development Status
 
-## 🚀 Current Task: Backpropagation Implementation
+## 🚀 Current Task: Training & Personality
 
 - [x] Matrix engine (`matrix.c/h`)
 - [x] Forward Pass implementation (`nn.c/h`)
-- [x] **Fixing `train_step` Backpropagation logic**
+- [x] Backpropagation logic verified and optimized
 - [x] Loss function implementation
-- [x] Optimization (Phase 2)
-- [x] Data Pipeline (Phase 3)
+- [x] Optimization
+- [x] Transformer Architecture (Forward & Backward)
+- [x] Model Wrapper integration
+- [x] Operational Integration (Shared Lib, Python Bridge, AI CLI)
+- [x] Data Pipeline
 
 ---
 
-## 💡 Notes for Backpropagation
-The goal is to implement the chain rule for derivatives:
-1. `delta` of output layer: `(prediction - target) * activation_derivative(z)`
-2. `delta` of hidden layers: `(next_layer_delta * transposed_weights) * activation_derivative(z)`
-3. Correct matrix lifecycle management (create/free deltas) to prevent memory leaks during the training loop.
+## 💡 Notes for Training Phase
+The goal is to move from a random-weight Transformer to a functional "Jolly" conversational model:
+1. **Pre-training:** Learn general language patterns from raw text.
+2. **SFT:** Learn the conversational 'Assistant' format.
+3. **Personality Alignment:** Use a curated dataset of happy, positive responses to bake the 'Jolly' persona into the weights.

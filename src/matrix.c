@@ -96,3 +96,11 @@ void matrix_print(Matrix *m) {
         printf("]\n");
     }
 }
+
+Matrix copy_matrix(Matrix *m) {
+    Matrix res = create_matrix(m->rows, m->cols);
+    for (int i = 0; i < m->rows * m->cols; i++) {
+        res.data[i] = m->data[i];
+    }
+    return res;
+}

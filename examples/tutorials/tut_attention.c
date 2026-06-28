@@ -21,7 +21,7 @@ int main() {
     }
     
     AttentionLayer al = create_attention_layer(embed_dim);
-    Matrix output = attention_forward(&al, &input);
+    Matrix output = attention_forward(&al, &input, false);
     
     printf("\nAttention Output:\n");
     for(int i=0; i<seq_len; i++) {

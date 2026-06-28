@@ -118,6 +118,7 @@ void forward(Network *net, Matrix *input) {
 // Backpropagation Implementation
 void train_step(Network *net, Matrix *input, Matrix *target, float lr, LossType loss_type, Optimizer *opt) {
     int batch_size = input->rows;
+    opt->lr = lr;
     
     // 1. Forward pass for the whole batch
     forward(net, input);
