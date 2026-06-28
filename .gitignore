@@ -1,0 +1,12 @@
+# Binaries and Objects
+bin/
+*.o
+
+# IDEs and OS
+.vscode/
+.DS_Store
+*/.DS_Store
+
+# Temporary files
+*.tmp
+*.log
