@@ -12,6 +12,7 @@ typedef struct {
     Embedding embedding;
     int num_blocks;
     TransformerBlock *blocks;
+    Matrix *block_inputs; // Store inputs to each block for backprop
     PredictionHead head;
     int embed_dim;
     int vocab_size;
@@ -23,5 +24,9 @@ void free_model(TransformerModel *model);
 Matrix model_forward(TransformerModel *model, int *tokens, int seq_len);
 int model_generate(TransformerModel *model, const char *prompt, int max_len);
 void model_train_step(TransformerModel *model, int *tokens, int *targets, int seq_len, float lr);
+
+// Weight Persistence
+void save_model_weights(TransformerModel *model, const char *filename);
+void load_model_weights(TransformerModel *model, const char *filename);
 
 #endif

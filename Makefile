@@ -8,7 +8,7 @@ TUT_DIR = examples/tutorials
 LIB_NAME = libaiframework.so
 
 # Source files
-SRCS = $(SRC_DIR)/matrix.c $(SRC_DIR)/nn.c $(SRC_DIR)/optimizer.c $(SRC_DIR)/data.c $(SRC_DIR)/tokenizer.c $(SRC_DIR)/embedding.c $(SRC_DIR)/positional.c $(SRC_DIR)/attention.c $(SRC_DIR)/multihead_attention.c $(SRC_DIR)/layernorm.c $(SRC_DIR)/transformer_block.c $(SRC_DIR)/prediction.c $(SRC_DIR)/model.c $(SRC_DIR)/sampling.c $(SRC_DIR)/bridge.c
+SRCS = $(SRC_DIR)/matrix.c $(SRC_DIR)/nn.c $(SRC_DIR)/optimizer.c $(SRC_DIR)/data.c $(SRC_DIR)/tokenizer.c $(SRC_DIR)/embedding.c $(SRC_DIR)/positional.c $(SRC_DIR)/attention.c $(SRC_DIR)/multihead_attention.c $(SRC_DIR)/layernorm.c $(SRC_DIR)/transformer_block.c $(SRC_DIR)/prediction.c $(SRC_DIR)/model.c $(SRC_DIR)/sampling.c $(SRC_DIR)/bridge.c $(SRC_DIR)/chat_data.c
 OBJS = $(SRCS:.c=.o)
 
 # Tutorials to build

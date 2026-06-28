@@ -11,6 +11,8 @@
 - [x] Model Wrapper integration
 - [x] Operational Integration (Shared Lib, Python Bridge, AI CLI)
 - [x] Data Pipeline
+- [x] Jolly Training Tutorial (Functional)
+- [x] Seed Dataset for Jolly Persona (`data/jolly_seed.jsonl`)
 
 ---
 
