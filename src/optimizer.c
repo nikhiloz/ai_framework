@@ -79,22 +79,24 @@ void optimizer_step(Optimizer *opt, Network *net, Matrix *w_grad, Matrix *b_grad
     
     if (opt->type == SGD) {
         for (int i = 0; i < l->weights.rows * l->weights.cols; i++) {
-            l->weights.data[i] -= opt->lr * w_grad->data[i];
+            set_val(&l->weights, i, get_val(&l->weights, i) - opt->lr * get_val(w_grad, i));
         }
         for (int i = 0; i < l->biases.rows * l->biases.cols; i++) {
-            l->biases.data[i] -= opt->lr * b_grad->data[i];
+            set_val(&l->biases, i, get_val(&l->biases, i) - opt->lr * get_val(b_grad, i));
         }
     } else if (opt->type == MOMENTUM) {
         Matrix *wm = opt->weight_m[layer_idx];
         Matrix *bm = opt->bias_m[layer_idx];
         
         for (int i = 0; i < l->weights.rows * l->weights.cols; i++) {
-            wm->data[i] = opt->beta1 * wm->data[i] + (1.0f - opt->beta1) * w_grad->data[i];
-            l->weights.data[i] -= opt->lr * wm->data[i];
+            float new_m = opt->beta1 * get_val(wm, i) + (1.0f - opt->beta1) * get_val(w_grad, i);
+            set_val(wm, i, new_m);
+            set_val(&l->weights, i, get_val(&l->weights, i) - opt->lr * new_m);
         }
         for (int i = 0; i < l->biases.rows * l->biases.cols; i++) {
-            bm->data[i] = opt->beta1 * bm->data[i] + (1.0f - opt->beta1) * b_grad->data[i];
-            l->biases.data[i] -= opt->lr * bm->data[i];
+            float new_m = opt->beta1 * get_val(bm, i) + (1.0f - opt->beta1) * get_val(b_grad, i);
+            set_val(bm, i, new_m);
+            set_val(&l->biases, i, get_val(&l->biases, i) - opt->lr * new_m);
         }
     } else if (opt->type == ADAM) {
         opt->t++;
@@ -107,20 +109,26 @@ void optimizer_step(Optimizer *opt, Network *net, Matrix *w_grad, Matrix *b_grad
         float bias_corr2 = 1.0f - powf(opt->beta2, opt->t);
 
         for (int i = 0; i < l->weights.rows * l->weights.cols; i++) {
-            wm->data[i] = opt->beta1 * wm->data[i] + (1.0f - opt->beta1) * w_grad->data[i];
-            wv->data[i] = opt->beta2 * wv->data[i] + (1.0f - opt->beta2) * w_grad->data[i] * w_grad->data[i];
+            float wg = get_val(w_grad, i);
+            float new_m = opt->beta1 * get_val(wm, i) + (1.0f - opt->beta1) * wg;
+            float new_v = opt->beta2 * get_val(wv, i) + (1.0f - opt->beta2) * wg * wg;
+            set_val(wm, i, new_m);
+            set_val(wv, i, new_v);
             
-            float m_hat = wm->data[i] / bias_corr1;
-            float v_hat = wv->data[i] / bias_corr2;
-            l->weights.data[i] -= opt->lr * m_hat / (sqrtf(v_hat) + opt->epsilon);
+            float m_hat = new_m / bias_corr1;
+            float v_hat = new_v / bias_corr2;
+            set_val(&l->weights, i, get_val(&l->weights, i) - opt->lr * m_hat / (sqrtf(v_hat) + opt->epsilon));
         }
         for (int i = 0; i < l->biases.rows * l->biases.cols; i++) {
-            bm->data[i] = opt->beta1 * bm->data[i] + (1.0f - opt->beta1) * b_grad->data[i];
-            bv->data[i] = opt->beta2 * bv->data[i] + (1.0f - opt->beta2) * b_grad->data[i] * b_grad->data[i];
+            float bg = get_val(b_grad, i);
+            float new_m = opt->beta1 * get_val(bm, i) + (1.0f - opt->beta1) * bg;
+            float new_v = opt->beta2 * get_val(bv, i) + (1.0f - opt->beta2) * bg * bg;
+            set_val(bm, i, new_m);
+            set_val(bv, i, new_v);
             
-            float m_hat = bm->data[i] / bias_corr1;
-            float v_hat = bv->data[i] / bias_corr2;
-            l->biases.data[i] -= opt->lr * m_hat / (sqrtf(v_hat) + opt->epsilon);
+            float m_hat = new_m / bias_corr1;
+            float v_hat = new_v / bias_corr2;
+            set_val(&l->biases, i, get_val(&l->biases, i) - opt->lr * m_hat / (sqrtf(v_hat) + opt->epsilon));
         }
     }
 }

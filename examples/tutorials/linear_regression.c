@@ -17,8 +17,8 @@ int main() {
     Dataset ds = create_dataset(100, 1, 1);
     for (int i = 0; i < 100; i++) {
         float x = (float)i / 10.0f;
-        ds.features.data[i] = x;
-        ds.targets.data[i] = 2.0f * x + 1.0f;
+        set_val(&ds.features, i, x);
+        set_val(&ds.targets, i, 2.0f * x + 1.0f);
     }
 
     // 2. Define a Simple Linear Model
@@ -45,14 +45,14 @@ int main() {
 
     // 4. Results & Analysis
     printf("\nTraining Complete!\n");
-    printf("Learned Weight: %.4f (Target: 2.0000)\n", net.layers[0].weights.data[0]);
-    printf("Learned Bias:   %.4f (Target: 1.0000)\n", net.layers[0].biases.data[0]);
+    printf("Learned Weight: %.4f (Target: 2.0000)\n", get_val(&net.layers[0].weights, 0));
+    printf("Learned Bias:   %.4f (Target: 1.0000)\n", get_val(&net.layers[0].biases, 0));
 
     // Test on a new value
     Matrix test_in = create_matrix(1, 1);
-    test_in.data[0] = 5.0f;
+    set_val(&test_in, 0, 5.0f);
     forward(&net, &test_in);
-    printf("\nTest: If x = 5.0, prediction is y = %.4f (Target: 11.0000)\n", net.layers[0].activations.data[0]);
+    printf("\nTest: If x = 5.0, prediction is y = %.4f (Target: 11.0000)\n", get_val(&net.layers[0].activations, 0));
 
     free_matrix(&batch_in);
     free_matrix(&batch_tar);

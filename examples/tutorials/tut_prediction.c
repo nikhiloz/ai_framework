@@ -38,10 +38,10 @@ int main() {
         // Simplified: manually copying into a matrix for this test
         int tid = tokens[i];
         for(int j=0; j < embed_dim; j++) {
-            x.data[i * embed_dim + j] = e.weights.data[tid * embed_dim + j];
+            set_val(&x, i * embed_dim + j, get_val(&e.weights, tid * embed_dim + j));
         }
     }
-    apply_positional_encoding(&x);
+    apply_rope(&x);
     
     // 3. Transformer Block
     TransformerBlock tb = create_transformer_block(num_heads, embed_dim, ffn_dim);

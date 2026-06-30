@@ -21,12 +21,13 @@ void embedding_lookup(Embedding *e, int *tokens, int token_len, Matrix *out_matr
         if (token_id < 0 || token_id >= e->vocab_size) {
             // Fill with zeros or a special <UNK> vector if available
             for (int j = 0; j < e->embedding_dim; j++) {
-                out_matrix->data[i * e->embedding_dim + j] = 0.0f;
+                set_val(out_matrix, i * e->embedding_dim + j, 0.0f);
             }
         } else {
             // Copy the row corresponding to the token_id
             for (int j = 0; j < e->embedding_dim; j++) {
-                out_matrix->data[i * e->embedding_dim + j] = e->weights.data[token_id * e->embedding_dim + j];
+                set_val(out_matrix, i * e->embedding_dim + j, 
+                        get_val(&e->weights, token_id * e->embedding_dim + j));
             }
         }
     }

@@ -1,6 +1,6 @@
 # AI Framework Development Status
 
-## 🚀 Current Task: Training & Personality
+## 🚀 Current Task: TinyLlama Compatibility
 
 - [x] Matrix engine (`matrix.c/h`)
 - [x] Forward Pass implementation (`nn.c/h`)
@@ -13,11 +13,13 @@
 - [x] Data Pipeline
 - [x] Jolly Training Tutorial (Functional)
 - [x] Seed Dataset for Jolly Persona (`data/jolly_seed.jsonl`)
+- [x] **TinyLlama Compatibility (Complete)**
 
 ---
 
-## 💡 Notes for Training Phase
-The goal is to move from a random-weight Transformer to a functional "Jolly" conversational model:
-1. **Pre-training:** Learn general language patterns from raw text.
-2. **SFT:** Learn the conversational 'Assistant' format.
-3. **Personality Alignment:** Use a curated dataset of happy, positive responses to bake the 'Jolly' persona into the weights.
+## 💡 Notes for TinyLlama Compatibility Phase
+The goal has shifted from training a custom "Jolly" persona to making the framework compatible with running the TinyLlama model. This requires significant architectural updates:
+1. **Normalization:** Replace LayerNorm with RMSNorm.
+2. **Activation:** Replace ReLU with SwiGLU.
+3. **Position Embeddings:** Replace standard positional embeddings with RoPE (Rotary Positional Embeddings).
+4. **Model Loading:** Implement support for loading Llama-compatible weight files.

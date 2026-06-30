@@ -2,16 +2,17 @@
 #define TRANSFORMER_BLOCK_H
 
 #include "multihead_attention.h"
-#include "layernorm.h"
+#include "rmsnorm.h" 
 #include "matrix.h"
 
 typedef struct {
     MultiHeadAttention mha;
-    LayerNorm ln1;
-    LayerNorm ln2;
+    RMSNorm ln1; // Changed to RMSNorm
+    RMSNorm ln2; // Changed to RMSNorm
     
     // Feed-Forward Network (FFN)
     Matrix W1; // (embed_dim, ffn_dim)
+    Matrix W3; // (embed_dim, ffn_dim) - New for SwiGLU
     Matrix b1; // (1, ffn_dim)
     Matrix W2; // (ffn_dim, embed_dim)
     Matrix b2; // (1, embed_dim)
@@ -24,6 +25,7 @@ typedef struct {
     Matrix res1;
     Matrix ln2_input;
     Matrix ffn1;
+    Matrix ffn_gate; // New for SwiGLU
 } TransformerBlock;
 
 TransformerBlock create_transformer_block(int num_heads, int embed_dim, int ffn_dim);

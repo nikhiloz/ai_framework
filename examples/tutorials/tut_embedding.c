@@ -29,7 +29,7 @@ int main() {
     for(int i=0; i<token_len; i++) {
         printf("Token %d: ", tokens[i]);
         for(int j=0; j<embed_dim; j++) {
-            printf("%.4f ", embeddings.data[i * embed_dim + j]);
+            printf("%.4f ", get_val(&embeddings, i * embed_dim + j));
         }
         printf("\n");
     }

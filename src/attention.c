@@ -38,18 +38,20 @@ void free_attention_layer(AttentionLayer *al) {
 
 static void softmax_rows(Matrix *m) {
     for (int i = 0; i < m->rows; i++) {
-        float max_val = m->data[i * m->cols];
+        float max_val = get_val(m, i * m->cols);
         for (int j = 1; j < m->cols; j++) {
-            if (m->data[i * m->cols + j] > max_val) max_val = m->data[i * m->cols + j];
+            float val = get_val(m, i * m->cols + j);
+            if (val > max_val) max_val = val;
         }
         
         float sum = 0;
         for (int j = 0; j < m->cols; j++) {
-            m->data[i * m->cols + j] = expf(m->data[i * m->cols + j] - max_val);
-            sum += m->data[i * m->cols + j];
+            float val = expf(get_val(m, i * m->cols + j) - max_val);
+            set_val(m, i * m->cols + j, val);
+            sum += val;
         }
         for (int j = 0; j < m->cols; j++) {
-            m->data[i * m->cols + j] /= sum;
+            set_val(m, i * m->cols + j, get_val(m, i * m->cols + j) / sum);
         }
     }
 }
@@ -106,7 +108,7 @@ Matrix attention_forward(AttentionLayer *al, Matrix *input, bool mask) {
     
     if (mask) {
         for (int i = 0; i < seq_len; i++) {
-            for (int j = i + 1; j < seq_len; j++) scores.data[i * seq_len + j] = -1e9f;
+            for (int j = i + 1; j < seq_len; j++) set_val(&scores, i * seq_len + j, -1e9f);
         }
     }
     
@@ -131,20 +133,26 @@ Matrix attention_backward(AttentionLayer *al, Matrix *input, Matrix *grad_output
     matrix_scalar_multiply(&scores, scale);
     if (mask) {
         for (int i = 0; i < seq_len; i++) {
-            for (int j = i + 1; j < seq_len; j++) scores.data[i * seq_len + j] = -1e9f;
+            for (int j = i + 1; j < seq_len; j++) set_val(&scores, i * seq_len + j, -1e9f);
         }
     }
     
     Matrix S = create_matrix(seq_len, seq_len);
     for (int i = 0; i < seq_len; i++) {
-        float max_val = scores.data[i * seq_len];
-        for (int j = 1; j < seq_len; j++) if (scores.data[i * seq_len + j] > max_val) max_val = scores.data[i * seq_len + j];
+        float max_val = get_val(&scores, i * seq_len);
+        for (int j = 1; j < seq_len; j++) {
+            float val = get_val(&scores, i * seq_len + j);
+            if (val > max_val) max_val = val;
+        }
         float sum = 0;
         for (int j = 0; j < seq_len; j++) {
-            S.data[i * seq_len + j] = expf(scores.data[i * seq_len + j] - max_val);
-            sum += S.data[i * seq_len + j];
+            float val = expf(get_val(&scores, i * seq_len + j) - max_val);
+            set_val(&S, i * seq_len + j, val);
+            sum += val;
         }
-        for (int j = 0; j < seq_len; j++) S.data[i * seq_len + j] /= sum;
+        for (int j = 0; j < seq_len; j++) {
+            set_val(&S, i * seq_len + j, get_val(&S, i * seq_len + j) / sum);
+        }
     }
 
     Matrix S_T = matrix_transpose(&S);
@@ -157,16 +165,18 @@ Matrix attention_backward(AttentionLayer *al, Matrix *input, Matrix *grad_output
         for (int j = 0; j < seq_len; j++) {
             float sum = 0;
             for (int k = 0; k < seq_len; k++) {
-                float s_ik = S.data[i * seq_len + k];
+                float s_ik = get_val(&S, i * seq_len + k);
                 float diff = (j == k) ? 1.0f : 0.0f;
-                sum += s_ik * (diff - S.data[i * seq_len + j]) * dL_dS.data[i * seq_len + k];
+                sum += s_ik * (diff - get_val(&S, i * seq_len + j)) * get_val(&dL_dS, i * seq_len + k);
             }
-            dL_dScores.data[i * seq_len + j] = sum;
+            set_val(&dL_dScores, i * seq_len + j, sum);
         }
     }
 
     Matrix dL_dScores_scaled = create_matrix(seq_len, seq_len);
-    for (int i = 0; i < seq_len * seq_len; i++) dL_dScores_scaled.data[i] = dL_dScores.data[i] * scale;
+    for (int i = 0; i < seq_len * seq_len; i++) {
+        set_val(&dL_dScores_scaled, i, get_val(&dL_dScores, i) * scale);
+    }
 
     Matrix dL_dQ = matrix_multiply(&dL_dScores_scaled, &K);
     Matrix dL_dScores_T = matrix_transpose(&dL_dScores_scaled);
@@ -180,9 +190,9 @@ Matrix attention_backward(AttentionLayer *al, Matrix *input, Matrix *grad_output
     Matrix dL_dWv = matrix_multiply(&V_T2, &dL_dV);
 
     for (int i = 0; i < dim * dim; i++) {
-        al->W_q.data[i] -= lr * dL_dWq.data[i];
-        al->W_k.data[i] -= lr * dL_dWk.data[i];
-        al->W_v.data[i] -= lr * dL_dWv.data[i];
+        set_val(&al->W_q, i, get_val(&al->W_q, i) - lr * get_val(&dL_dWq, i));
+        set_val(&al->W_k, i, get_val(&al->W_k, i) - lr * get_val(&dL_dWk, i));
+        set_val(&al->W_v, i, get_val(&al->W_v, i) - lr * get_val(&dL_dWv, i));
     }
 
     Matrix Wq_T = matrix_transpose(&al->W_q);
@@ -195,7 +205,7 @@ Matrix attention_backward(AttentionLayer *al, Matrix *input, Matrix *grad_output
     Matrix dL_dX = create_matrix(seq_len, dim);
     matrix_fill_zero(&dL_dX);
     for (int i = 0; i < seq_len * dim; i++) {
-        dL_dX.data[i] = grad_q.data[i] + grad_k.data[i] + grad_v.data[i];
+        set_val(&dL_dX, i, get_val(&grad_q, i) + get_val(&grad_k, i) + get_val(&grad_v, i));
     }
 
     free_matrix(&Q); free_matrix(&K); free_matrix(&V); free_matrix(&K_T); free_matrix(&scores);

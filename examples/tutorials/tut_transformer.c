@@ -25,7 +25,7 @@ int main() {
     embedding_lookup(&e, tokens, token_len, &x);
     
     // 2. Add Positional Encoding
-    apply_positional_encoding(&x);
+    apply_rope(&x);
     
     // 3. Forward pass through one Transformer Block
     TransformerBlock tb = create_transformer_block(num_heads, embed_dim, ffn_dim);
@@ -37,7 +37,7 @@ int main() {
     printf("\nFinal Output (first 2 tokens):\n");
     for(int i=0; i < (token_len < 2 ? token_len : 2); i++) {
         printf("Token %d: ", i);
-        for(int j=0; j<embed_dim; j++) printf("%.4f ", output.data[i * embed_dim + j]);
+        for(int j=0; j<embed_dim; j++) printf("%.4f ", get_val(&output, i * embed_dim + j));
         printf("\n");
     }
     

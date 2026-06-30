@@ -3,9 +3,9 @@
 
 #include "matrix.h"
 
-// Applies sinusoidal positional encoding to an input matrix of embeddings
+// Applies Rotary Positional Embeddings (RoPE) to an input matrix.
 // input: Matrix of shape (seq_len, embed_dim)
-// This function modifies the input matrix in-place by adding the encoding
-void apply_positional_encoding(Matrix *input);
+// This function modifies the input matrix in-place by rotating the embeddings.
+void apply_rope(Matrix *input);
 
 #endif

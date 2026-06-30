@@ -91,23 +91,25 @@ void forward(Network *net, Matrix *input) {
         if (l->activation == SOFTMAX) {
             // Softmax needs to be computed per-row for mini-batches
             for (int row = 0; row < l->z.rows; row++) {
-                float max_z = l->z.data[row * l->z.cols];
+                float max_z = get_val(&l->z, row * l->z.cols);
                 for (int j = 1; j < l->z.cols; j++) {
-                    if (l->z.data[row * l->z.cols + j] > max_z) max_z = l->z.data[row * l->z.cols + j];
+                    float val = get_val(&l->z, row * l->z.cols + j);
+                    if (val > max_z) max_z = val;
                 }
                 
                 float sum = 0;
                 for (int j = 0; j < l->z.cols; j++) {
-                    l->activations.data[row * l->z.cols + j] = expf(l->z.data[row * l->z.cols + j] - max_z);
-                    sum += l->activations.data[row * l->z.cols + j];
+                    float val = expf(get_val(&l->z, row * l->z.cols + j) - max_z);
+                    set_val(&l->activations, row * l->z.cols + j, val);
+                    sum += val;
                 }
                 for (int j = 0; j < l->z.cols; j++) {
-                    l->activations.data[row * l->z.cols + j] /= sum;
+                    set_val(&l->activations, row * l->z.cols + j, get_val(&l->activations, row * l->z.cols + j) / sum);
                 }
             }
         } else {
             for (int j = 0; j < l->z.rows * l->z.cols; j++) {
-                l->activations.data[j] = activate(l->z.data[j], l->activation);
+                set_val(&l->activations, j, activate(get_val(&l->z, j), l->activation));
             }
         }
         free_matrix(&z_prod);
@@ -128,9 +130,10 @@ void train_step(Network *net, Matrix *input, Matrix *target, float lr, LossType 
     Matrix delta = create_matrix(batch_size, out_layer->out_dim);
     for (int i = 0; i < batch_size; i++) {
         for (int j = 0; j < out_layer->out_dim; j++) {
-            float pred = out_layer->activations.data[i * out_layer->out_dim + j];
-            float gradient = loss_gradient(loss_type, pred, target->data[i * out_layer->out_dim + j]);
-            delta.data[i * out_layer->out_dim + j] = gradient * activate_derivative(out_layer->z.data[i * out_layer->out_dim + j], out_layer->activation);
+            float pred = get_val(&out_layer->activations, i * out_layer->out_dim + j);
+            float gradient = loss_gradient(loss_type, pred, get_val(target, i * out_layer->out_dim + j));
+            float z_val = get_val(&out_layer->z, i * out_layer->out_dim + j);
+            set_val(&delta, i * out_layer->out_dim + j, gradient * activate_derivative(z_val, out_layer->activation));
         }
     }
 
@@ -152,7 +155,7 @@ void train_step(Network *net, Matrix *input, Matrix *target, float lr, LossType 
         matrix_fill_zero(&b_grad);
         for (int b = 0; b < batch_size; b++) {
             for (int j = 0; j < l->biases.cols; j++) {
-                b_grad.data[j] += delta.data[b * l->biases.cols + j];
+                set_val(&b_grad, j, get_val(&b_grad, j) + get_val(&delta, b * l->biases.cols + j));
             }
         }
         // Average bias gradients over the batch
@@ -171,8 +174,9 @@ void train_step(Network *net, Matrix *input, Matrix *target, float lr, LossType 
             Matrix next_delta = create_matrix(batch_size, prev->out_dim);
             for (int b = 0; b < batch_size; b++) {
                 for (int j = 0; j < prev->out_dim; j++) {
-                    float z_val = prev->z.data[b * prev->out_dim + j];
-                    next_delta.data[b * prev->out_dim + j] = prev_delta_raw.data[b * prev->out_dim + j] * activate_derivative(z_val, prev->activation);
+                    float z_val = get_val(&prev->z, b * prev->out_dim + j);
+                    float d = get_val(&prev_delta_raw, b * prev->out_dim + j) * activate_derivative(z_val, prev->activation);
+                    set_val(&next_delta, b * prev->out_dim + j, d);
                 }
             }
             
@@ -195,8 +199,8 @@ float calculate_loss(LossType type, Matrix *pred, Matrix *target) {
     float loss = 0;
     int n = pred->cols;
     for (int i = 0; i < n; i++) {
-        float p = pred->data[i];
-        float t = target->data[i];
+        float p = get_val(pred, i);
+        float t = get_val(target, i);
         switch (type) {
             case MSE: loss += 0.5f * (p - t) * (p - t); break;
             case BCE: {

@@ -27,9 +27,11 @@ int main() {
     Matrix x = create_matrix(token_len - 1, embed_dim);
     for(int i=0; i < token_len - 1; i++) {
         int tid = tokens[i];
-        for(int j=0; j < embed_dim; j++) x.data[i * embed_dim + j] = e.weights.data[tid * embed_dim + j];
+        for(int j=0; j < embed_dim; j++) {
+            set_val(&x, i * embed_dim + j, get_val(&e.weights, tid * embed_dim + j));
+        }
     }
-    apply_positional_encoding(&x);
+    apply_rope(&x);
     
     TransformerBlock tb = create_transformer_block(num_heads, embed_dim, ffn_dim);
     Matrix transformer_out = transformer_block_forward(&tb, &x);

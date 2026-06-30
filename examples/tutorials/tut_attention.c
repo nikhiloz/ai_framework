@@ -10,13 +10,13 @@ int main() {
     // Create a dummy input sequence
     Matrix input = create_matrix(seq_len, embed_dim);
     for(int i=0; i<seq_len * embed_dim; i++) {
-        input.data[i] = (float)rand() / RAND_MAX;
+        set_val(&input, i, (float)rand() / RAND_MAX);
     }
     
     printf("Input Sequence:\n");
     for(int i=0; i<seq_len; i++) {
         printf("Token %d: ", i);
-        for(int j=0; j<embed_dim; j++) printf("%.4f ", input.data[i * embed_dim + j]);
+        for(int j=0; j<embed_dim; j++) printf("%.4f ", get_val(&input, i * embed_dim + j));
         printf("\n");
     }
     
@@ -26,7 +26,7 @@ int main() {
     printf("\nAttention Output:\n");
     for(int i=0; i<seq_len; i++) {
         printf("Token %d: ", i);
-        for(int j=0; j<embed_dim; j++) printf("%.4f ", output.data[i * embed_dim + j]);
+        for(int j=0; j<embed_dim; j++) printf("%.4f ", get_val(&output, i * embed_dim + j));
         printf("\n");
     }
     

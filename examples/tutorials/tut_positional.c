@@ -15,16 +15,16 @@ int main() {
     printf("Original Embeddings (all zero):\n");
     for(int i=0; i<seq_len; i++) {
         printf("Pos %d: ", i);
-        for(int j=0; j<embed_dim; j++) printf("%.4f ", embeddings.data[i * embed_dim + j]);
+        for(int j=0; j<embed_dim; j++) printf("%.4f ", get_val(&embeddings, i * embed_dim + j));
         printf("\n");
     }
     
-    apply_positional_encoding(&embeddings);
+    apply_rope(&embeddings);
     
     printf("\nEmbeddings after Positional Encoding:\n");
     for(int i=0; i<seq_len; i++) {
         printf("Pos %d: ", i);
-        for(int j=0; j<embed_dim; j++) printf("%.4f ", embeddings.data[i * embed_dim + j]);
+        for(int j=0; j<embed_dim; j++) printf("%.4f ", get_val(&embeddings, i * embed_dim + j));
         printf("\n");
     }
     

@@ -58,14 +58,14 @@ void dataloader_next_batch(DataLoader *dl, Matrix *batch_features, Matrix *batch
         
         // Copy features
         for (int j = 0; j < dl->dataset->features.cols; j++) {
-            batch_features->data[i * batch_features->cols + j] = 
-                dl->dataset->features.data[idx * dl->dataset->features.cols + j];
+            set_val(batch_features, i * batch_features->cols + j, 
+                    get_val(&dl->dataset->features, idx * dl->dataset->features.cols + j));
         }
         
         // Copy targets
         for (int j = 0; j < dl->dataset->targets.cols; j++) {
-            batch_targets->data[i * batch_targets->cols + j] = 
-                dl->dataset->targets.data[idx * dl->dataset->targets.cols + j];
+            set_val(batch_targets, i * batch_targets->cols + j, 
+                    get_val(&dl->dataset->targets, idx * dl->dataset->targets.cols + j));
         }
     }
 

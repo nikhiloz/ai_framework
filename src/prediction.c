@@ -29,7 +29,7 @@ Matrix prediction_forward(PredictionHead *ph, Matrix *input) {
     // Add bias
     for (int i = 0; i < seq_len; i++) {
         for (int j = 0; j < ph->vocab_size; j++) {
-            logits.data[i * ph->vocab_size + j] += ph->b_out.data[j];
+            set_val(&logits, i * ph->vocab_size + j, get_val(&logits, i * ph->vocab_size + j) + get_val(&ph->b_out, j));
         }
     }
     
@@ -47,22 +47,23 @@ Matrix prediction_backward(PredictionHead *ph, Matrix *input, Matrix *logits, in
     Matrix dL_dLogits = create_matrix(seq_len, vocab_size);
     for (int i = 0; i < seq_len; i++) {
         // Compute softmax for the row
-        float max_val = logits->data[i * vocab_size];
+        float max_val = get_val(logits, i * vocab_size);
         for (int j = 1; j < vocab_size; j++) {
-            if (logits->data[i * vocab_size + j] > max_val) max_val = logits->data[i * vocab_size + j];
+            float val = get_val(logits, i * vocab_size + j);
+            if (val > max_val) max_val = val;
         }
         float sum = 0;
         for (int j = 0; j < vocab_size; j++) {
-            float p = expf(logits->data[i * vocab_size + j] - max_val);
-            // Store temporary probability in dL_dLogits to avoid another allocation
-            dL_dLogits.data[i * vocab_size + j] = p;
+            float p = expf(get_val(logits, i * vocab_size + j) - max_val);
+            // Store temporary probability in dL_dLogits
+            set_val(&dL_dLogits, i * vocab_size + j, p);
             sum += p;
         }
         
         for (int j = 0; j < vocab_size; j++) {
-            float prob = dL_dLogits.data[i * vocab_size + j] / sum;
+            float prob = get_val(&dL_dLogits, i * vocab_size + j) / sum;
             float target = (targets[i] == j) ? 1.0f : 0.0f;
-            dL_dLogits.data[i * vocab_size + j] = prob - target;
+            set_val(&dL_dLogits, i * vocab_size + j, prob - target);
         }
     }
 
@@ -75,16 +76,16 @@ Matrix prediction_backward(PredictionHead *ph, Matrix *input, Matrix *logits, in
     matrix_fill_zero(&dL_dB);
     for (int i = 0; i < seq_len; i++) {
         for (int j = 0; j < vocab_size; j++) {
-            dL_dB.data[j] += dL_dLogits.data[i * vocab_size + j];
+            set_val(&dL_dB, j, get_val(&dL_dB, j) + get_val(&dL_dLogits, i * vocab_size + j));
         }
     }
 
     // 4. Update Weights (Simple SGD)
     for (int i = 0; i < embed_dim * vocab_size; i++) {
-        ph->W_out.data[i] -= lr * dL_dW.data[i];
+        set_val(&ph->W_out, i, get_val(&ph->W_out, i) - lr * get_val(&dL_dW, i));
     }
     for (int j = 0; j < vocab_size; j++) {
-        ph->b_out.data[j] -= lr * dL_dB.data[j];
+        set_val(&ph->b_out, j, get_val(&ph->b_out, j) - lr * get_val(&dL_dB, j));
     }
 
     // 5. Compute dL/dX (Gradient to propagate back to Transformer Block)
@@ -109,15 +110,16 @@ float cross_entropy_loss(Matrix *logits, int *targets) {
 
     for (int i = 0; i < seq_len; i++) {
         // 1. Compute Softmax for the row (probability distribution)
-        float max_val = logits->data[i * vocab_size];
+        float max_val = get_val(logits, i * vocab_size);
         for (int j = 1; j < vocab_size; j++) {
-            if (logits->data[i * vocab_size + j] > max_val) max_val = logits->data[i * vocab_size + j];
+            float val = get_val(logits, i * vocab_size + j);
+            if (val > max_val) max_val = val;
         }
 
         float sum = 0;
         float *row_probs = (float *)malloc(vocab_size * sizeof(float));
         for (int j = 0; j < vocab_size; j++) {
-            row_probs[j] = expf(logits->data[i * vocab_size + j] - max_val);
+            row_probs[j] = expf(get_val(logits, i * vocab_size + j) - max_val);
             sum += row_probs[j];
         }
 

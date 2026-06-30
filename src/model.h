@@ -28,5 +28,7 @@ void model_train_step(TransformerModel *model, int *tokens, int *targets, int se
 // Weight Persistence
 void save_model_weights(TransformerModel *model, const char *filename);
 void load_model_weights(TransformerModel *model, const char *filename);
+void load_llama_weights(TransformerModel *model, const char *filename);
+void load_llama_weights_mmap(TransformerModel *model, const char *filename);
 
 #endif

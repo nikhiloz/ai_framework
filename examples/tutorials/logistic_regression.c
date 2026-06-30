@@ -18,10 +18,10 @@ int main() {
     for (int i = 0; i < 100; i++) {
         float x1 = (float)rand() / RAND_MAX;
         float x2 = (float)rand() / RAND_MAX;
-        ds.features.data[i*2+0] = x1;
-        ds.features.data[i*2+1] = x2;
+        set_val(&ds.features, i*2+0, x1);
+        set_val(&ds.features, i*2+1, x2);
         // Decision boundary: x1 + x2 > 1.0
-        ds.targets.data[i] = (x1 + x2 > 1.0f) ? 1.0f : 0.0f;
+        set_val(&ds.targets, i, (x1 + x2 > 1.0f) ? 1.0f : 0.0f);
     }
 
     // 2. Define the Model
@@ -51,10 +51,10 @@ int main() {
     float tests[4][2] = {{0.1, 0.1}, {0.9, 0.9}, {0.4, 0.7}, {0.2, 0.3}};
     for (int i = 0; i < 4; i++) {
         Matrix test_in = create_matrix(1, 2);
-        test_in.data[0] = tests[i][0];
-        test_in.data[1] = tests[i][1];
+        set_val(&test_in, 0, tests[i][0]);
+        set_val(&test_in, 1, tests[i][1]);
         forward(&net, &test_in);
-        float pred = net.layers[0].activations.data[0];
+        float pred = get_val(&net.layers[0].activations, 0);
         printf("In: [%.1f, %.1f] -> Pred: %.4f (Class: %s)\n", 
                tests[i][0], tests[i][1], pred, (pred > 0.5f) ? "1" : "0");
         free_matrix(&test_in);

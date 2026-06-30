@@ -18,9 +18,9 @@ int main() {
     float train_in[4][2] = {{0,0}, {0,1}, {1,0}, {1,1}};
     float train_out[4][1] = {{0}, {0}, {0}, {1}};
     for(int i=0; i<4; i++) {
-        ds.features.data[i*2+0] = train_in[i][0];
-        ds.features.data[i*2+1] = train_in[i][1];
-        ds.targets.data[i] = train_out[i][0];
+        set_val(&ds.features, i*2+0, train_in[i][0]);
+        set_val(&ds.features, i*2+1, train_in[i][1]);
+        set_val(&ds.targets, i, train_out[i][0]);
     }
 
     // 2. Define the Model
@@ -48,10 +48,10 @@ int main() {
     printf("\nTesting AND Gate:\n");
     for (int i = 0; i < 4; i++) {
         Matrix test_in = create_matrix(1, 2);
-        test_in.data[0] = train_in[i][0];
-        test_in.data[1] = train_in[i][1];
+        set_val(&test_in, 0, train_in[i][0]);
+        set_val(&test_in, 1, train_in[i][1]);
         forward(&net, &test_in);
-        float pred = net.layers[0].activations.data[0];
+        float pred = get_val(&net.layers[0].activations, 0);
         printf("In: [%.0f, %.0f] -> Pred: %.4f (Class: %s)\n", 
                train_in[i][0], train_in[i][1], pred, (pred > 0.5f) ? "1" : "0");
         free_matrix(&test_in);

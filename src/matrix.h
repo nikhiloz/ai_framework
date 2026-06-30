@@ -2,11 +2,18 @@
 #define MATRIX_H
 
 #include <stdlib.h>
+#include <stdint.h>
+
+typedef enum {
+    PRECISION_FLOAT32,
+    PRECISION_FLOAT16
+} Precision;
 
 typedef struct {
     int rows;
     int cols;
-    float *data;
+    Precision precision;
+    void *data;
 } Matrix;
 
 // Lifecycle
@@ -28,5 +35,7 @@ Matrix copy_matrix(Matrix *m);
 
 // Utility
 void matrix_print(Matrix *m);
+float get_val(Matrix *m, int i);
+void set_val(Matrix *m, int i, float val);
 
 #endif

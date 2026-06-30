@@ -1,37 +1,42 @@
-# AI Framework: From Scratch to Transformers
+# AI Framework: From Scratch to Llama Compatibility
 
-A pedagogical implementation of neural network architectures written in pure C. This project serves as a deep-dive into the mathematical foundations of modern AI, tracing the evolution from simple linear models to the complex Transformer architecture used in Large Language Models (LLMs).
+A high-performance implementation of neural network architectures written in pure C. Originally designed as a pedagogical deep-dive into the mathematical foundations of AI, this framework has evolved into a functional inference engine compatible with modern LLM architectures, specifically targeting compatibility with **TinyLlama**.
 
 ## 🚀 Project Goal
-The objective is to build a functional, from-scratch framework that implements the "alphabet" of AI:
-**Weights $ightarrow$ Forward Pass $ightarrow$ Loss $ightarrow$ Backpropagation $ightarrow$ Update**.
-
-The journey moves from basic vector-to-vector mappings (MLPs) to sequence-aware attention mechanisms (Transformers).
+The framework traces the evolution of AI from basic linear models to the state-of-the-art Transformer architecture. Its current primary objective is to provide a lightweight, dependency-free C implementation capable of running Llama-based models using efficient memory management and modern architectural primitives.
 
 ## 🛠️ Technical Stack
 - **Language**: C (C11 standard)
 - **Build System**: GNU Make
+- **Precision Support**: 
+  - `FLOAT32`: Standard precision for training and high-accuracy inference.
+  - `FLOAT16`: Half-precision support for reduced memory footprint and faster inference.
 - **Dependencies**: `libc` (math library `-lm`)
 
 ## 🧩 Implemented Features
 
-### 1. Core Engine
-- **Matrix Engine**: A custom linear algebra library for matrix multiplication, transposition, and element-wise operations.
-- **Optimization**: Implementation of SGD, Momentum, and **Adam** optimizers.
+### 1. High-Performance Core Engine
+- **Matrix Engine**: A custom linear algebra library supporting matrix multiplication, transposition, and element-wise operations.
+- **Memory Mapping (mmap)**: Implemented `model_mmap` for efficient, zero-copy loading of large model weights directly from disk.
+- **Optimization**: Full implementation of SGD, Momentum, and **Adam** optimizers for training tasks.
 
-### 2. Multi-Layer Perceptron (MLP)
-- **Forward Pass**: Support for multiple layers with various activation functions (Sigmoid, ReLU, Tanh, Softmax).
-- **Backpropagation**: Full implementation of the chain rule for gradient descent.
-- **Loss Functions**: MSE, Binary Cross-Entropy (BCE), and Categorical Cross-Entropy (CCE).
+### 2. Modern Transformer Architecture (Llama-Compatible)
+The framework has been upgraded from a basic Transformer to a Llama-style architecture:
+- **RMSNorm**: Replaced standard LayerNorm with Root Mean Square Layer Normalization for improved training stability and inference speed.
+- **SwiGLU Activation**: Implemented the Gated Linear Unit with Swish activation in the Feed-Forward Network (FFN), replacing standard ReLU.
+- **RoPE (Rotary Positional Embeddings)**: Replaced sinusoidal encoding with Rotary embeddings to better capture relative positional information.
+- **Multi-Head Attention (MHA)**: Optimized QKV (Query, Key, Value) mechanism for sequence processing.
+- **Causal Masking**: Integrated masking to ensure auto-regressive generation.
 
-### 3. Transformer Foundations (Stage 1 & 2)
-- **Tokenizer**: A character-level tokenizer for converting raw text into token IDs.
-- **Embedding Layers**: Mapping discrete tokens to high-dimensional continuous vector spaces.
-- **Positional Encoding**: Sinusoidal encoding to provide the model with sequence order information.
-- **Self-Attention**: The core QKV (Query, Key, Value) mechanism.
-- **Multi-Head Attention (MHA)**: Parallel attention heads for diverse feature extraction.
-- **Layer Normalization**: Numerical stability for deep networks.
-- **Transformer Block**: An integrated block combining MHA, Feed-Forward Networks, Residual Connections, and LayerNorm.
+### 3. Inference & Generation
+- **Sampling Logic**: Implementation of temperature-based sampling for diverse text generation.
+- **Generation Loop**: A complete loop for iterative token prediction.
+- **KV Cache**: Optimized inference by caching Key and Value tensors to avoid redundant computations.
+
+### 4. Integration & Tooling
+- **C-Bridge**: A shared library interface allowing the C engine to be invoked by higher-level languages.
+- **AI CLI**: A dedicated command-line interface for interacting with the loaded models.
+- **Python Bridge**: Integration for easy weight manipulation and testing via Python.
 
 ## 📖 How to Run
 
@@ -41,16 +46,17 @@ make
 ```
 
 ### Run Tutorials
-The project includes a series of tutorials in `bin/` that demonstrate each component:
-- `./bin/tut_perceptron`: The simplest neural unit.
-- `./bin/tut_linear_regression`: Basic linear mapping.
-- `./bin/tut_mlp_deep_dive`: Solving the non-linear XOR problem.
-- `./bin/tut_tokenizer`: Text $\leftrightarrow$ Token ID conversion.
-- `./bin/tut_embedding`: Token $ightarrow$ Vector mapping.
-- `./bin/tut_positional`: Injecting sequence order.
-- `./bin/tut_attention`: Core self-attention mechanism.
-- `./bin/tut_mha`: Multi-head attention processing.
-- `./bin/tut_transformer`: The full integrated Transformer block.
+The project includes a series of tutorials in `bin/` that demonstrate the evolution of the architecture:
+- `./bin/tut_perceptron` $ightarrow$ `./bin/tut_linear_regression` $ightarrow$ `./bin/tut_mlp_deep_dive`
+- `./bin/tut_tokenizer` $ightarrow$ `./bin/tut_embedding` $ightarrow$ `./bin/tut_positional`
+- `./bin/tut_attention` $ightarrow$ `./bin/tut_mha` $ightarrow$ `./bin/tut_transformer`
+
+### Run the AI CLI
+To interact with the framework via the command line:
+```bash
+# Example usage (depends on your build configuration)
+./bin/ai_cli --model path/to/weights.bin
+```
 
 ## 🗺️ Roadmap
-See [ROADMAP.md](ROADMAP.md) for the detailed path towards a conversational LLM.
+For detailed architectural milestones and the path toward full TinyLlama compatibility, see [ROADMAP.md](ROADMAP.md) and [STATUS.md](STATUS.md).
