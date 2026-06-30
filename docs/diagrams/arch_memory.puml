@@ -1,0 +1,48 @@
+@startuml
+skinparam componentStyle rectangle
+
+package "ai_framework Core" {
+    class TransformerModel {
+        + Tokenizer tokenizer
+        + Embedding embedding
+        + TransformerBlock* blocks
+        + PredictionHead head
+        + int embed_dim
+        + int vocab_size
+    }
+
+    class TransformerBlock {
+        + MultiHeadAttention mha
+        + RMSNorm ln1
+        + RMSNorm ln2
+        + Matrix W1, W2, W3
+        + Matrix b1, b2
+        + int embed_dim
+        + int ffn_dim
+    }
+
+    class MultiHeadAttention {
+        + Matrix WQ, WK, WV, WO
+        + int num_heads
+        + int head_dim
+    }
+
+    class Matrix {
+        + int rows
+        + int cols
+        + Precision precision
+        + void* data
+    }
+
+    class RMSNorm {
+        + Matrix weights
+    }
+}
+
+TransformerModel "1" *-- "many" TransformerBlock : contains
+TransformerBlock "1" *-- "1" MultiHeadAttention : contains
+TransformerBlock "1" *-- "2" RMSNorm : contains
+TransformerBlock "1" *-- "many" Matrix : uses weights
+MultiHeadAttention "1" *-- "many" Matrix : uses weights
+RMSNorm "1" *-- "1" Matrix : uses weights
+@enduml

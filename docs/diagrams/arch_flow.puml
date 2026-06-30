@@ -1,0 +1,22 @@
+@startuml
+start
+:Input Matrix (seq_len, embed_dim);
+partition "Block Layer 1: Attention" {
+    :RMSNorm (ln1) 
+(Normalize for stability);
+    :Multi-Head Attention (MHA) 
+(Query, Key, Value computation);
+    :Residual Connection 
+(input + mha_out);
+}
+partition "Block Layer 2: Feed-Forward" {
+    :RMSNorm (ln2) 
+(Normalize for stability);
+    :SwiGLU FFN 
+(W1 * x * sigmoid(W3 * x) * W2);
+    :Residual Connection 
+(res1 + ffn_out);
+}
+:Output Matrix (seq_len, embed_dim);
+stop
+@enduml

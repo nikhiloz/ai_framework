@@ -1,0 +1,25 @@
+@startuml
+package "User Layer" {
+    [AI CLI] as cli
+    [Python Scripts] as py
+}
+
+package "Interface Layer" {
+    [C-Bridge (Shared Library)] as bridge
+}
+
+package "Core Engine" {
+    [Model Engine] as engine
+    [model_mmap] as mmap
+}
+
+database "Disk" {
+    [Weight Binaries (.bin)] as weights
+}
+
+cli --> bridge : invokes
+py --> bridge : invokes
+bridge --> engine : calls functions
+engine --> mmap : requests weights
+mmap --> weights : memory maps (zero-copy)
+@enduml
