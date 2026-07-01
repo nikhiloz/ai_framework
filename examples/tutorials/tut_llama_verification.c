@@ -16,7 +16,11 @@ int main() {
     TransformerModel model = create_model(vocab_size, embed_dim, num_heads, num_blocks, ffn_dim);
     
     printf("Attempting to load weights with mmap...\n");
-    load_llama_weights_mmap(&model, "tinyllama_weights.bin");
+    if (load_llama_weights_mmap(&model, "tinyllama_weights.bin") != 0) {
+        fprintf(stderr, "Error: Failed to load weights via mmap. Check if the file exists and is not on a virtual filesystem (e.g., /sdcard).\n");
+        free_model(&model);
+        return 1;
+    }
     
     // Verify some values
     // W_q of the first head of the first block should be 0, 1, 2...

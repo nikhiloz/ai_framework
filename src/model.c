@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
 #include "sampling.h"
 #include "positional.h"
 
@@ -23,9 +24,29 @@ TransformerModel create_model(int vocab_size, int embed_dim, int num_heads, int 
     return model;
 }
 
+TransformerModel init_model(int vocab_size, int embed_dim, int num_heads, int num_blocks, int ffn_dim) {
+    printf("DEBUG: init_model(ffn_dim=%d)\n", ffn_dim);
+    TransformerModel model;
+    model.vocab_size = vocab_size;
+    model.embed_dim = embed_dim;
+    model.tokenizer = create_tokenizer(vocab_size * 2);
+    model.embedding = init_embedding(vocab_size, embed_dim);
+    model.num_blocks = num_blocks;
+    model.blocks = (TransformerBlock *)malloc(num_blocks * sizeof(TransformerBlock));
+    model.block_inputs = (Matrix *)malloc(num_blocks * sizeof(Matrix));
+    for (int i = 0; i < num_blocks; i++) {
+        model.blocks[i] = init_transformer_block(num_heads, embed_dim, ffn_dim);
+        model.block_inputs[i] = create_matrix(0, 0);
+    }
+    model.head = init_prediction_head(embed_dim, vocab_size);
+    
+    return model;
+}
+
 void free_model(TransformerModel *model) {
     free_tokenizer(&model->tokenizer);
     free_embedding(&model->embedding);
+    printf("DEBUG: Starting block forward, num_blocks=%d\n", model->num_blocks);
     for (int i = 0; i < model->num_blocks; i++) {
         free_transformer_block(&model->blocks[i]);
         free_matrix(&model->block_inputs[i]);
@@ -33,34 +54,61 @@ void free_model(TransformerModel *model) {
     free(model->blocks);
     free(model->block_inputs);
     free_prediction_head(&model->head);
+
+    if (model->mmap_ptr) {
+        munmap(model->mmap_ptr, model->mmap_size);
+    }
 }
 
 Matrix model_forward(TransformerModel *model, int *tokens, int seq_len) {
+    printf("DEBUG: model_forward started. seq_len: %d, embed_dim: %d\n", seq_len, model->embed_dim);
+    printf("DEBUG: model->num_blocks=%d\n", model->num_blocks);
+    
     // 1. Embedding
+    printf("DEBUG: Starting Embedding lookup...\n");
+    fflush(stdout);
     Matrix x = create_matrix(seq_len, model->embed_dim);
     embedding_lookup(&model->embedding, tokens, seq_len, &x);
+    printf("DEBUG: Embedding lookup complete. Matrix x: (%d, %d)\n", x.rows, x.cols);
+    fflush(stdout);
     
     // 2. Positional Encoding
-    apply_rope(&x); // Changed from apply_positional_encoding
+    printf("DEBUG: Applying RoPE...\n");
+    fflush(stdout);
+    apply_rope(&x); 
+    printf("DEBUG: RoPE complete.\n");
+    fflush(stdout);
     
     // 3. Transformer Blocks
     Matrix current_x = x;
+    printf("DEBUG: Starting block forward, num_blocks=%d\n", model->num_blocks);
     for (int i = 0; i < model->num_blocks; i++) {
+        printf("DEBUG: Processing block %d... current_x: (%d, %d)\n", i, current_x.rows, current_x.cols);
+        fflush(stdout);
+        
         // Store input for backprop
         free_matrix(&model->block_inputs[i]);
         model->block_inputs[i] = copy_matrix(&current_x);
         
+    printf("DEBUG: Entering transformer_block_forward for block %d\n", i);
+        printf("DEBUG: Calling transformer_block_forward for block %d, block->blocks[%d].mha.num_heads=%d\n", i, i, model->blocks[i].mha.num_heads);
+        fflush(stdout);
         Matrix next_x = transformer_block_forward(&model->blocks[i], &current_x);
+        printf("DEBUG: Block %d forward complete.\n", i);
+        fflush(stdout);
+        
         if (i > 0) free_matrix(&current_x);
         current_x = next_x;
     }
     
     // 4. Prediction Head
+    printf("DEBUG: Prediction head forward... current_x: (%d, %d)\n", current_x.rows, current_x.cols);
     Matrix logits = prediction_forward(&model->head, &current_x);
     
     free_matrix(&x);
     free_matrix(&current_x);
     
+    printf("DEBUG: model_forward complete.\n");
     return logits;
 }
 
@@ -129,15 +177,14 @@ void save_model_weights(TransformerModel *model, const char *filename) {
     fwrite(model->embedding.weights.data, sizeof(float), model->embedding.weights.rows * model->embedding.weights.cols, fp);
 
     // Save transformer blocks
+    printf("DEBUG: Starting block forward, num_blocks=%d\n", model->num_blocks);
     for (int i = 0; i < model->num_blocks; i++) {
         TransformerBlock *tb = &model->blocks[i];
         
         // MHA Weights
-        for (int h = 0; h < tb->mha.num_heads; h++) {
-            fwrite(tb->mha.heads[h].W_q.data, sizeof(float), tb->mha.heads[h].W_q.rows * tb->mha.heads[h].W_q.cols, fp);
-            fwrite(tb->mha.heads[h].W_k.data, sizeof(float), tb->mha.heads[h].W_k.rows * tb->mha.heads[h].W_k.cols, fp);
-            fwrite(tb->mha.heads[h].W_v.data, sizeof(float), sizeof(float) * tb->mha.heads[h].W_v.rows * tb->mha.heads[h].W_v.cols, fp);
-        }
+        fwrite(tb->mha.W_q.data, sizeof(float), tb->mha.W_q.rows * tb->mha.W_q.cols, fp);
+        fwrite(tb->mha.W_k.data, sizeof(float), tb->mha.W_k.rows * tb->mha.W_k.cols, fp);
+        fwrite(tb->mha.W_v.data, sizeof(float), tb->mha.W_v.rows * tb->mha.W_v.cols, fp);
         fwrite(tb->mha.W_o.data, sizeof(float), tb->mha.W_o.rows * tb->mha.W_o.cols, fp);
 
         // LN1
@@ -182,15 +229,14 @@ void load_model_weights(TransformerModel *model, const char *filename) {
     fread(model->embedding.weights.data, sizeof(float), model->embedding.weights.rows * model->embedding.weights.cols, fp);
 
     // Load transformer blocks
+    printf("DEBUG: Starting block forward, num_blocks=%d\n", model->num_blocks);
     for (int i = 0; i < model->num_blocks; i++) {
         TransformerBlock *tb = &model->blocks[i];
         
         // MHA Weights
-        for (int h = 0; h < tb->mha.num_heads; h++) {
-            fread(tb->mha.heads[h].W_q.data, sizeof(float), tb->mha.heads[h].W_q.rows * tb->mha.heads[h].W_q.cols, fp);
-            fread(tb->mha.heads[h].W_k.data, sizeof(float), tb->mha.heads[h].W_k.rows * tb->mha.heads[h].W_k.cols, fp);
-            fread(tb->mha.heads[h].W_v.data, sizeof(float), tb->mha.heads[h].W_v.rows * tb->mha.heads[h].W_v.cols, fp);
-        }
+        fread(tb->mha.W_q.data, sizeof(float), tb->mha.W_q.rows * tb->mha.W_q.cols, fp);
+        fread(tb->mha.W_k.data, sizeof(float), tb->mha.W_k.rows * tb->mha.W_k.cols, fp);
+        fread(tb->mha.W_v.data, sizeof(float), tb->mha.W_v.rows * tb->mha.W_v.cols, fp);
         fread(tb->mha.W_o.data, sizeof(float), tb->mha.W_o.rows * tb->mha.W_o.cols, fp);
 
         // LN1
@@ -235,15 +281,14 @@ void load_llama_weights(TransformerModel *model, const char *filename) {
     fread(model->embedding.weights.data, sizeof(float), model->embedding.weights.rows * model->embedding.weights.cols, fp);
 
     // Load transformer blocks
+    printf("DEBUG: Starting block forward, num_blocks=%d\n", model->num_blocks);
     for (int i = 0; i < model->num_blocks; i++) {
         TransformerBlock *tb = &model->blocks[i];
         
         // MHA Weights
-        for (int h = 0; h < tb->mha.num_heads; h++) {
-            fread(tb->mha.heads[h].W_q.data, sizeof(float), tb->mha.heads[h].W_q.rows * tb->mha.heads[h].W_q.cols, fp);
-            fread(tb->mha.heads[h].W_k.data, sizeof(float), tb->mha.heads[h].W_k.rows * tb->mha.heads[h].W_k.cols, fp);
-            fread(tb->mha.heads[h].W_v.data, sizeof(float), tb->mha.heads[h].W_v.rows * tb->mha.heads[h].W_v.cols, fp);
-        }
+        fread(tb->mha.W_q.data, sizeof(float), tb->mha.W_q.rows * tb->mha.W_q.cols, fp);
+        fread(tb->mha.W_k.data, sizeof(float), tb->mha.W_k.rows * tb->mha.W_k.cols, fp);
+        fread(tb->mha.W_v.data, sizeof(float), tb->mha.W_v.rows * tb->mha.W_v.cols, fp);
         fread(tb->mha.W_o.data, sizeof(float), tb->mha.W_o.rows * tb->mha.W_o.cols, fp);
 
         // LN1 (RMSNorm - only weight/gamma)

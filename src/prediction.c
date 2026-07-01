@@ -16,6 +16,15 @@ PredictionHead create_prediction_head(int embed_dim, int vocab_size) {
     return ph;
 }
 
+PredictionHead init_prediction_head(int embed_dim, int vocab_size) {
+    PredictionHead ph;
+    ph.embed_dim = embed_dim;
+    ph.vocab_size = vocab_size;
+    ph.W_out = init_matrix(embed_dim, vocab_size);
+    ph.b_out = init_matrix(1, vocab_size);
+    return ph;
+}
+
 void free_prediction_head(PredictionHead *ph) {
     free_matrix(&ph->W_out);
     free_matrix(&ph->b_out);

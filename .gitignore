@@ -1,12 +1,27 @@
 # Binaries and Objects
 bin/
 *.o
+*.so
+*.a
+*.exe
+
+# Models and Data
+*.gguf
+*.bin
+*.deb
 
 # IDEs and OS
 .vscode/
 .DS_Store
 */.DS_Store
 
-# Temporary files
+# Temporary files, Logs and Outputs
 *.tmp
 *.log
+*.txt
+output*
+
+# Executables
+debug_mmap
+dump_gguf
+test_llama_poc

@@ -10,6 +10,14 @@ Embedding create_embedding(int vocab_size, int embedding_dim) {
     return e;
 }
 
+Embedding init_embedding(int vocab_size, int embedding_dim) {
+    Embedding e;
+    e.vocab_size = vocab_size;
+    e.embedding_dim = embedding_dim;
+    e.weights = init_matrix(vocab_size, embedding_dim);
+    return e;
+}
+
 void free_embedding(Embedding *e) {
     free_matrix(&e->weights);
 }

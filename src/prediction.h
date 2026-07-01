@@ -11,6 +11,7 @@ typedef struct {
 } PredictionHead;
 
 PredictionHead create_prediction_head(int embed_dim, int vocab_size);
+PredictionHead init_prediction_head(int embed_dim, int vocab_size);
 void free_prediction_head(PredictionHead *ph);
 
 // Maps the transformer output to vocabulary logits

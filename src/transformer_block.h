@@ -29,6 +29,7 @@ typedef struct {
 } TransformerBlock;
 
 TransformerBlock create_transformer_block(int num_heads, int embed_dim, int ffn_dim);
+TransformerBlock init_transformer_block(int num_heads, int embed_dim, int ffn_dim);
 void free_transformer_block(TransformerBlock *tb);
 
 // Forward pass through the transformer block

@@ -6,9 +6,6 @@
 
 typedef struct {
     int embed_dim;
-    Matrix W_q; // Weight matrix for Query
-    Matrix W_k; // Weight matrix for Key
-    Matrix W_v; // Weight matrix for Value
     
     // KV Cache
     Matrix *K_cache; // Cached keys (accumulated over time)
@@ -17,13 +14,14 @@ typedef struct {
 } AttentionLayer;
 
 AttentionLayer create_attention_layer(int embed_dim);
+AttentionLayer init_attention_layer(int embed_dim);
 void free_attention_layer(AttentionLayer *al);
 
-// Computes the self-attention output for a given input matrix
-// input: Matrix of shape (seq_len, embed_dim)
+// Computes the self-attention output for a given Q, K, V
+// Q, K, V: Matrices of shape (seq_len, embed_dim)
 // mask: If true, applies a causal look-ahead mask (for generative models)
 // returns: Matrix of shape (seq_len, embed_dim)
-Matrix attention_forward(AttentionLayer *al, Matrix *input, bool mask);
+Matrix attention_forward(AttentionLayer *al, Matrix *Q, Matrix *K, Matrix *V, bool mask);
 
 // Backprop through attention
 // input: The original input to attention_forward (seq_len, embed_dim)

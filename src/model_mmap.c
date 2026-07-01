@@ -11,18 +11,19 @@
 
 // ... [create_model, free_model, model_forward, model_generate, model_train_step remain unchanged] ...
 
-void load_llama_weights_mmap(TransformerModel *model, const char *filename) {
+int load_llama_weights_mmap(TransformerModel *model, const char *filename) {
+    printf("DEBUG: Entering load_llama_weights_mmap for file: %s\n", filename);
     int fd = open(filename, O_RDONLY);
     if (fd == -1) {
         perror("Failed to open file for mmap");
-        return;
+        return -1;
     }
 
     struct stat sb;
     if (fstat(fd, &sb) == -1) {
         perror("Failed to get file size");
         close(fd);
-        return;
+        return -1;
     }
 
     size_t file_size = sb.st_size;
@@ -30,7 +31,7 @@ void load_llama_weights_mmap(TransformerModel *model, const char *filename) {
     if (map == MAP_FAILED) {
         perror("mmap failed");
         close(fd);
-        return;
+        return -1;
     }
 
     int *int_map = (int *)map;
@@ -42,7 +43,7 @@ void load_llama_weights_mmap(TransformerModel *model, const char *filename) {
         fprintf(stderr, "Model architecture mismatch during load\n");
         munmap(map, file_size);
         close(fd);
-        return;
+        return -1;
     }
 
     // Pointer to start of float data (after 3 ints)
@@ -58,19 +59,17 @@ void load_llama_weights_mmap(TransformerModel *model, const char *filename) {
         TransformerBlock *tb = &model->blocks[i];
         
         // MHA Weights
-        for (int h = 0; h < tb->mha.num_heads; h++) {
-            size_t q_size = tb->mha.heads[h].W_q.rows * tb->mha.heads[h].W_q.cols;
-            memcpy(tb->mha.heads[h].W_q.data, data, q_size * sizeof(float));
-            data += q_size;
-            
-            size_t k_size = tb->mha.heads[h].W_k.rows * tb->mha.heads[h].W_k.cols;
-            memcpy(tb->mha.heads[h].W_k.data, data, k_size * sizeof(float));
-            data += k_size;
-            
-            size_t v_size = tb->mha.heads[h].W_v.rows * tb->mha.heads[h].W_v.cols;
-            memcpy(tb->mha.heads[h].W_v.data, data, v_size * sizeof(float));
-            data += v_size;
-        }
+        size_t q_size = tb->mha.W_q.rows * tb->mha.W_q.cols;
+        memcpy(tb->mha.W_q.data, data, q_size * sizeof(float));
+        data += q_size;
+        
+        size_t k_size = tb->mha.W_k.rows * tb->mha.W_k.cols;
+        memcpy(tb->mha.W_k.data, data, k_size * sizeof(float));
+        data += k_size;
+        
+        size_t v_size = tb->mha.W_v.rows * tb->mha.W_v.cols;
+        memcpy(tb->mha.W_v.data, data, v_size * sizeof(float));
+        data += v_size;
         
         size_t o_size = tb->mha.W_o.rows * tb->mha.W_o.cols;
         memcpy(tb->mha.W_o.data, data, o_size * sizeof(float));
@@ -119,4 +118,5 @@ void load_llama_weights_mmap(TransformerModel *model, const char *filename) {
 
     munmap(map, file_size);
     close(fd);
+    return 0;
 }

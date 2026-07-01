@@ -9,6 +9,7 @@ typedef struct {
 } RMSNorm;
 
 RMSNorm create_rmsnorm(int dim);
+RMSNorm init_rmsnorm(int dim);
 void free_rmsnorm(RMSNorm *ln);
 
 // Normalizes the input matrix. Modifies input in-place.

@@ -9,10 +9,14 @@ typedef struct {
     int head_dim;
     int embed_dim;
     AttentionLayer *heads;
+    Matrix W_q; // Global Query projection
+    Matrix W_k; // Global Key projection
+    Matrix W_v; // Global Value projection
     Matrix W_o; // Output projection matrix
 } MultiHeadAttention;
 
 MultiHeadAttention create_mha(int num_heads, int embed_dim);
+MultiHeadAttention init_mha(int num_heads, int embed_dim);
 void free_mha(MultiHeadAttention *mha);
 
 // Computes the MHA output for a given input matrix

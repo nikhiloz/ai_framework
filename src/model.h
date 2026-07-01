@@ -16,9 +16,12 @@ typedef struct {
     PredictionHead head;
     int embed_dim;
     int vocab_size;
+    void *mmap_ptr;
+    size_t mmap_size;
 } TransformerModel;
 
 TransformerModel create_model(int vocab_size, int embed_dim, int num_heads, int num_blocks, int ffn_dim);
+TransformerModel init_model(int vocab_size, int embed_dim, int num_heads, int num_blocks, int ffn_dim);
 void free_model(TransformerModel *model);
 
 Matrix model_forward(TransformerModel *model, int *tokens, int seq_len);
@@ -29,6 +32,6 @@ void model_train_step(TransformerModel *model, int *tokens, int *targets, int se
 void save_model_weights(TransformerModel *model, const char *filename);
 void load_model_weights(TransformerModel *model, const char *filename);
 void load_llama_weights(TransformerModel *model, const char *filename);
-void load_llama_weights_mmap(TransformerModel *model, const char *filename);
+int load_llama_weights_mmap(TransformerModel *model, const char *filename);
 
 #endif

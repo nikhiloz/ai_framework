@@ -15,6 +15,13 @@ RMSNorm create_rmsnorm(int dim) {
     return ln;
 }
 
+RMSNorm init_rmsnorm(int dim) {
+    RMSNorm ln;
+    ln.dim = dim;
+    ln.weight = init_matrix(1, dim);
+    return ln;
+}
+
 void free_rmsnorm(RMSNorm *ln) {
     free_matrix(&ln->weight);
 }

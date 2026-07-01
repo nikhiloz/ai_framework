@@ -2,6 +2,8 @@
 #include <math.h>
 
 void apply_rope(Matrix *input) {
+    printf("DEBUG: apply_rope start\n");
+    fflush(stdout);
     int seq_len = input->rows;
     int embed_dim = input->cols;
 
@@ -19,4 +21,6 @@ void apply_rope(Matrix *input) {
             set_val(input, pos * embed_dim + i + 1, x1 * sinf(theta) + x2 * cosf(theta));
         }
     }
+    printf("DEBUG: apply_rope end\n");
+    fflush(stdout);
 }

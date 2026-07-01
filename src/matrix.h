@@ -9,15 +9,25 @@ typedef enum {
     PRECISION_FLOAT16
 } Precision;
 
+typedef enum {
+    QUANT_NONE,
+    QUANT_Q4_0,
+    QUANT_Q4_K
+} QuantType;
+
 typedef struct {
     int rows;
     int cols;
+    int stride;
     Precision precision;
+    QuantType quant;
     void *data;
+    int is_mmaped;
 } Matrix;
 
 // Lifecycle
 Matrix create_matrix(int rows, int cols);
+Matrix init_matrix(int rows, int cols);
 void free_matrix(Matrix *m);
 
 // Basic Operations

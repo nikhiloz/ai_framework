@@ -10,6 +10,7 @@ typedef struct {
 } Embedding;
 
 Embedding create_embedding(int vocab_size, int embedding_dim);
+Embedding init_embedding(int vocab_size, int embedding_dim);
 void free_embedding(Embedding *e);
 
 // Maps a sequence of tokens to a matrix of embeddings
